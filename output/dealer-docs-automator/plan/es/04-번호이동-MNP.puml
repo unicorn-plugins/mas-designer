@@ -1,0 +1,58 @@
+@startuml flow-04-mnp
+!theme cerulean-outline
+title F04. 번호이동 (MNP · Mobile Number Portability)
+skinparam shadowing false
+
+actor "영업사원" as Agent
+actor "고객" as Customer
+participant "단말 UI" as UI
+participant "RTA Orchestrator" as Orch
+participant "ID Verifier" as IDV
+participant "RegGuard" as RG
+participant "Fraud Scorer" as FS
+participant "MNP Gateway\n(타사 연동)" as MNPGW
+participant "AutoDoc" as AD
+database "본사 BSS" as BSS
+
+Customer -> Agent : MNP 요청 (타사 → 당사)
+Agent -> UI : 기존 통신사·번호 입력
+UI -> Orch : 이벤트 (type=MNP)
+
+par 병렬 검증
+  Orch -> IDV : 신원 검증
+  IDV --> Orch : PASS
+else
+  Orch -> RG : 규정 (기존 약정·위약금·MNP 제한 확인)
+  RG --> Orch : PASS (약정 잔여 위약금 5만 원 고지)
+else
+  Orch -> FS : 사기 스코어링
+  FS --> Orch : LOW
+end
+
+Orch -> MNPGW : 타사 가입 정보 조회 (본인확인 기반)
+MNPGW --> Orch : 현재 상태·번호 상태 응답
+
+alt 타사 회선 정상
+  Orch -> UI : Green + 위약금 5만 원 안내
+  UI -> Customer : 위약금 설명·동의
+  Customer -> UI : 동의
+  Orch -> AD : MNP 신청서 + 위임장 자동 생성
+  AD -> UI : 전자서명 요청
+  Customer -> UI : 서명
+  Orch -> BSS : MNP 신청 (타사 이관 요청)
+  BSS -> MNPGW : 이관 요청
+  MNPGW --> BSS : 이관 승인
+  BSS --> Orch : 개통 예정 시각
+  Orch -> UI : 완료
+else 타사 회선 분실·정지 등 이상
+  MNPGW --> Orch : 상태=정지
+  Orch -> UI : Yellow · 고객 확인 필요
+end
+
+note over Orch
+  추가 고려사항:
+  - 24개월 약정 남은 경우 위약금 > 혜택일 수 있음 → 영업사원 자가 판단 지원
+  - 번호 인증 실패 재시도 UX 중요
+end note
+
+@enduml

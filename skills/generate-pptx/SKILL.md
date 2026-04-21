@@ -96,11 +96,30 @@ AskUserQuestion으로 확인 (기본값 사용 시 스킵):
      - Pretendard 폰트 통일
      - `main().catch(e => { console.error(...); process.exit(1); })` 진입점
 4. **빌드 실행**: Bash `cd output/{project}/step3 && node build.js`
-5. **검증**:
+5. **검증 A — 빌드 확인**:
    - 종료 코드 0 확인
    - `3.{project}.pptx` 존재 + 크기 > 0
    - 실패 시 에러 분석 → 코드 수정 → 재실행 (최대 3회)
-6. **사용자 보고**: 절대 경로, 파일 크기, 슬라이드 수, 빌드 스크립트 경로
+6. **검증 B — PowerShell COM 시각적 검토**:
+   - 아래 PS1 템플릿으로 `.temp/export-pptx.ps1`을 생성 후 슬라이드별 PNG 추출
+   ```powershell
+   $pptxPath = '<절대경로\3.{project}.pptx>'
+   $outDir   = '<절대경로\preview>'
+   if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }
+   Add-Type -AssemblyName Microsoft.Office.Interop.PowerPoint
+   $ppt  = New-Object -ComObject PowerPoint.Application
+   $pres = $ppt.Presentations.Open($pptxPath, 0, 0, 0)
+   foreach ($i in 1..$pres.Slides.Count) {
+       $pres.Slides.Item($i).Export("$outDir\slide-$i.png", 'PNG', 1600, 900)
+   }
+   $pres.Close(); $ppt.Quit()
+   ```
+   - PowerShell 실행 전 `Get-Process POWERPNT -ErrorAction SilentlyContinue | Stop-Process -Force`로 파일 잠금 해제
+   - 추출된 PNG를 Read 도구로 열어 레이아웃·이미지 비율·텍스트 잘림 시각 확인
+   - 이상 발견 시 `build.js` 수정 → 재빌드 → 재검토 (최대 2회)
+   - **기존 이미지 파일(`images/` 폴더)은 절대 삭제하지 말 것 — 레이아웃·크기만 조정**
+   - 시각 검토 완료 후 임시 파일 정리: `Remove-Item '<preview경로>\*.png' -Force; Remove-Item '.temp\export-pptx.ps1' -Force`
+7. **사용자 보고**: 절대 경로, 파일 크기, 슬라이드 수, 빌드 스크립트 경로, 시각 검토 결과 요약
 
 ### Phase 6: STEP 3 완료 보고 (`ulw` 활용)
 
@@ -129,6 +148,7 @@ AskUserQuestion으로 확인 (기본값 사용 시 스킵):
 - spec-writer 에이전트 우회 (오케스트레이터가 직접 명세 작성 금지)
 - 검증 없이 "생성 완료" 보고 금지
 - `.env`에 하드코딩된 API Key를 코드에 복제 금지
+- 시각적 검토 후 수정 시 `images/` 폴더의 기존 이미지 파일 삭제 (레이아웃·크기 조정만 허용)
 
 ## 완료 조건
 

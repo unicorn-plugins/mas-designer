@@ -1,0 +1,71 @@
+@startuml flow-01-new-activation-success
+!theme cerulean-outline
+title F01. 신규 개통 · 성공 Path (Green)
+skinparam shadowing false
+skinparam SequenceMessageAlign center
+
+actor "대리점 영업사원" as Agent
+actor "고객" as Customer
+participant "대리점 단말\n(UI)" as UI
+participant "RTA Orchestrator\n(LangGraph)" as Orch
+participant "ID Verifier" as IDV
+participant "RegGuard" as RG
+participant "Fraud Scorer" as FS
+participant "AutoDoc" as AD
+participant "Audit Logger" as AL
+database "본사 BSS" as BSS
+
+Customer -> Agent : 신규 개통 요청
+Agent -> UI : 신분증 촬영
+Customer -> UI : 셀피 촬영 + 라이브니스
+
+UI -> Orch : 개통 이벤트(신규/일반/성인)
+
+par 병렬 에이전트 평가 (≤2초)
+  Orch -> IDV : 신원 검증
+  activate IDV
+  IDV -> IDV : OCR + VLM 위변조 + 얼굴 대조
+  IDV --> Orch : PASS (conf 0.96)
+  deactivate IDV
+else
+  Orch -> RG : 규정 검증
+  activate RG
+  RG -> RG : 약정 이력 + 미성년 여부 + KYC
+  RG --> Orch : PASS (조항 §3.2 인용)
+  deactivate RG
+else
+  Orch -> FS : 사기 스코어링
+  activate FS
+  FS -> FS : 다회선·블랙리스트·패턴 ML
+  FS --> Orch : LOW (score 0.08)
+  deactivate FS
+end
+
+Orch -> Orch : 스코어 종합 → Green
+Orch -> AL : 이벤트 로깅
+Orch -> UI : ✅ Green · 진행 승인
+UI -> Agent : "진행 가능 (근거 3건)"
+
+Agent -> Customer : 개통 안내 + 요금제 확정
+Customer -> UI : 최종 동의
+
+Orch -> AD : 서류 자동 생성 요청
+activate AD
+AD -> AD : 위임장 + 가입신청서 + 동의서 PDF
+AD --> UI : 전자서명 요청
+deactivate AD
+Customer -> UI : 전자서명
+UI -> Orch : 서명 완료
+
+Orch -> BSS : 개통 제출 (PDF + 메타)
+BSS --> Orch : 접수 완료 (접수번호 ACT-2026-...)
+Orch -> AL : 최종 이벤트 로깅
+Orch -> UI : 🎉 개통 접수 완료
+UI -> Agent : 접수번호 + 예상 개통 시각
+
+note over Orch, BSS
+  전체 소요: 약 9~12분 (기존 25~40분 대비 -60%)
+  영업사원 개입: 고객 설명 + 최종 확인 2회
+end note
+
+@enduml

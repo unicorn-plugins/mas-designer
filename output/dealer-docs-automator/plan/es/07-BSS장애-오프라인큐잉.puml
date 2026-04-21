@@ -1,0 +1,54 @@
+@startuml flow-07-bss-outage
+!theme cerulean-outline
+title F07. 본사 BSS 장애 · 오프라인 큐잉
+skinparam shadowing false
+
+actor "영업사원" as Agent
+actor "고객" as Customer
+participant "단말 UI" as UI
+participant "RTA Orchestrator" as Orch
+participant "Local Queue\n(대리점 큐)" as Q
+database "본사 BSS" as BSS
+participant "Health Monitor" as HM
+
+Customer -> Agent : 개통 요청
+UI -> Orch : 이벤트
+
+Orch -> Orch : 병렬 검증 수행 (IDV/RG/FS) — Green
+
+Orch -> BSS : 개통 제출 시도
+BSS --> Orch : **TIMEOUT / 5xx**
+
+Orch -> HM : 본사 상태 확인
+HM --> Orch : BSS DEGRADED
+
+alt 고객 동의: 예약 제출
+  Orch -> UI : ⏳ 본사 일시 장애 · 예약 제출 가능\n(BSS 복구 후 자동 제출)
+  UI -> Customer : 상황 설명 + 선택
+  Customer -> UI : 예약 제출 동의
+  Orch -> Q : 개통 요청 큐잉 (큐ID Q-...)
+  Q -> Q : 로컬 저장 (PII 암호화)
+  Orch -> UI : 접수번호 임시 발급
+  UI -> Agent : 고객 안내 (복구 시 자동 개통)
+
+  HM -> HM : BSS 상태 주기 Poll
+  HM --> Orch : BSS RECOVERED (예: 15분 후)
+  Orch -> Q : 큐 드레인 (순차 제출)
+  Q -> BSS : 대기 요청 제출
+  BSS --> Q : 접수 완료
+  Orch -> UI : 자동 개통 완료 알림
+  UI -> Agent : (비동기) 알림 배너
+else 고객 거절: 재방문 요청
+  Customer -> UI : 재방문 선호
+  UI -> Orch : 요청 폐기
+  Orch -> Agent : 재방문 안내 스크립트 제공
+end
+
+note over Q, BSS
+  핵심 가치:
+  - BSS 장애 시 기존: 업무 마비 → 개선: 오프라인 지속
+  - 로컬 큐는 PII 암호화 + TTL 24h
+  - 감사 로그에 큐 진입·드레인 전 기록
+end note
+
+@enduml

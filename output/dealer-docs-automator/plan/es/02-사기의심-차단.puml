@@ -1,0 +1,61 @@
+@startuml flow-02-fraud-blocked
+!theme cerulean-outline
+title F02. 사기 의심 차단 (Red)
+skinparam shadowing false
+
+actor "대리점 영업사원" as Agent
+actor "의심 고객" as Customer
+participant "대리점 단말" as UI
+participant "RTA Orchestrator" as Orch
+participant "ID Verifier" as IDV
+participant "Fraud Scorer" as FS
+participant "RegGuard" as RG
+participant "Audit Logger" as AL
+actor "본사 리스크팀" as Risk
+
+Customer -> Agent : 개통 요청
+Agent -> UI : 신분증 촬영 (재사용 의심 신분증)
+UI -> Orch : 개통 이벤트
+
+par 병렬 평가
+  Orch -> IDV : 검증
+  IDV --> Orch : PASS (conf 0.81, 라이브니스 경계치)
+else
+  Orch -> FS : 스코어링
+  FS -> FS : **최근 7일 3회선 신규 개통 이력** 감지
+  FS --> Orch : HIGH (score 0.94, 근거: 다회선 패턴)
+else
+  Orch -> RG : 규정 검증
+  RG --> Orch : PASS
+end
+
+Orch -> Orch : 스코어 종합 → **Red**
+Orch -> AL : Red 판정 이벤트 로깅
+Orch -> UI : ⛔ Red · 진행 차단 + 근거
+
+UI -> Agent : "다회선 이상 패턴 감지\n(최근 7일 3회선)"
+
+Agent -> UI : 에스컬레이션 버튼
+
+Orch -> Risk : Yellow/Red 에스컬레이션 알림 (실시간)
+Risk -> Risk : 고객 원본 자료 검토
+
+alt 본사 리스크팀: 차단 확정
+  Risk --> Orch : 차단 확정 + 블랙리스트 등록
+  Orch -> UI : 차단 완료 통보
+  UI -> Agent : 고객 응대 스크립트 (정중한 거절)
+  Agent -> Customer : 거절 사유 간접 전달
+else 본사 리스크팀: 허용
+  Risk --> Orch : 수동 승인 (사유 기재)
+  Orch -> UI : Yellow → Green 전환
+  note right : 거버넌스 감사 로그에 수동 승인자·사유 기록
+end
+
+Orch -> AL : 최종 결정 로깅
+
+note over Orch, AL
+  핵심 가치: 사기 손실 차단 + 감사 추적 완비
+  건당 손실 100~300만 원 예방, 법적 리스크 방어
+end note
+
+@enduml

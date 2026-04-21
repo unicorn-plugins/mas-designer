@@ -1,0 +1,54 @@
+@startuml flow-05-corporate
+!theme cerulean-outline
+title F05. 법인 개통 (다중 서류 · 재직증명 검증)
+skinparam shadowing false
+
+actor "영업사원" as Agent
+actor "법인 담당자" as Customer
+participant "단말 UI" as UI
+participant "RTA Orchestrator" as Orch
+participant "ID Verifier" as IDV
+participant "Corp Docs\n(법인 전용)" as CD
+participant "RegGuard" as RG
+participant "Fraud Scorer" as FS
+participant "AutoDoc" as AD
+database "본사 BSS" as BSS
+
+Customer -> Agent : 법인 다회선 개통 요청 (사업자등록 · 재직증명 · 위임장)
+Agent -> UI : 다중 서류 일괄 스캔
+
+UI -> Orch : 이벤트 (type=CORP)
+
+par 병렬 처리
+  Orch -> IDV : 담당자 신원 확인
+  IDV --> Orch : PASS
+else
+  Orch -> CD : 법인 서류 OCR + 검증
+  CD -> CD : 사업자등록 진위 조회 (국세청 API)
+  CD -> CD : 재직증명 서명·직인 VLM 탐지
+  CD --> Orch : 검증 결과 + 신뢰도 점수
+else
+  Orch -> RG : 법인 규정 (할인 한도·결합·명의)
+  RG --> Orch : PASS
+else
+  Orch -> FS : 사기 스코어 (법인 다회선 패턴 특화)
+  FS --> Orch : LOW
+end
+
+Orch -> Orch : 종합 → Green
+
+Orch -> AD : 법인 전용 서류 (위임장 × N회선, 가입신청서 × N)
+AD --> UI : 서명 요청 (대표자 + 담당자 2단)
+Customer -> UI : 전자서명
+Orch -> BSS : 일괄 제출 (회선별)
+BSS --> Orch : 접수 (개별 접수번호 N건)
+Orch -> UI : 완료 + 회선별 개통 예정
+
+note over Orch, BSS
+  법인 개통 차별 포인트:
+  - 서류 수가 많음(최대 10종+) → 병렬 OCR 핵심
+  - 할인 한도 규정 실시간 확인 (RegGuard)
+  - 대표자·담당자 2단 전자서명 흐름
+end note
+
+@enduml

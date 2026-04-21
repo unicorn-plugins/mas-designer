@@ -1,0 +1,52 @@
+@startuml flow-06-foreigner
+!theme cerulean-outline
+title F06. 외국인 가입자 (다국어 · 체류자격)
+skinparam shadowing false
+
+actor "영업사원" as Agent
+actor "외국인 고객" as Customer
+participant "단말 UI" as UI
+participant "RTA Orchestrator" as Orch
+participant "ID Verifier" as IDV
+participant "RegGuard" as RG
+participant "Translator\n(LLM)" as TR
+participant "Fraud Scorer" as FS
+participant "AutoDoc" as AD
+
+Customer -> Agent : 개통 요청 (외국인등록증 or 여권)
+Agent -> UI : 언어 선택 (EN/ZH/VI/...)
+
+UI -> Orch : 이벤트 (type=FOREIGNER, lang=EN)
+
+par 병렬 검증
+  Orch -> IDV : 외국인등록증 OCR + VLM 위변조
+  IDV -> IDV : **체류자격·유효기간 추출**
+  IDV --> Orch : PASS + 체류유형=F-4
+else
+  Orch -> RG : 외국인 가입 규정 (체류자격별 회선 한도)
+  RG --> Orch : F-4 → 3회선 한도, 현재 1회선 가능
+else
+  Orch -> FS : 외국인 특화 패턴
+  FS --> Orch : LOW
+end
+
+Orch -> TR : 약관·동의서 영문 번역 (고객 언어)
+TR --> Orch : 번역본 (법적 효력 원문 + 참고 번역)
+
+Orch -> UI : Green + 번역된 약관 제시
+UI -> Customer : 약관 설명 (EN)
+Customer -> UI : 동의
+
+Orch -> AD : 서류 생성 (원문 + 참고 번역 병기)
+AD --> UI : 전자서명
+Customer -> UI : 서명
+Orch -> UI : 완료
+
+note right of Orch
+  핵심 고려사항:
+  - 원문 한글 서류가 법적 효력 유지
+  - 번역은 이해 보조용 (Disclaimer 명시)
+  - 체류자격 만료일에 회선 해지 자동 알림 (후속)
+end note
+
+@enduml

@@ -1,0 +1,32 @@
+[
+  {
+    "slide": 1,
+    "filename": "slide-01-cover.png",
+    "prompt": "A clean modern business illustration on pure white background. A mobile carrier retail store counter with a young Korean sales representative holding a tablet showing AI overlay icons (check marks, shield, radar). The scene conveys 'AI-powered real-time risk triage for telecom dealers'. Soft navy blue and teal accent colors. Flat vector style, professional, enterprise-grade. No text or logos. 16:9 composition."
+  },
+  {
+    "slide": 3,
+    "filename": "slide-03-customer-why.png",
+    "prompt": "A confident Korean male sales representative in his 30s wearing business casual, holding a tablet with a glowing green shield icon and 2-second countdown timer. Behind him a faint outline of a customer. Background is pure white. The scene expresses 'AI reads the risk in 2 seconds, so I don't panic in front of suspicious customers'. Soft navy and green accent colors. Clean business illustration, flat vector style, 16:9."
+  },
+  {
+    "slide": 4,
+    "filename": "slide-04-enterprise-why.png",
+    "prompt": "A clean dashboard view on a large monitor showing KPI cards: 'Fraud Blocked', 'Reject Rate Down', 'Compliance Pass'. A silhouette of an executive CIO viewing the screen from behind. Pure white background with soft navy blue and green charts. The scene conveys 'Real-time blocking of fraud and compliance violations saves billions and protects brand'. Modern enterprise dashboard illustration, flat vector style, professional, 16:9. No Korean text in image."
+  },
+  {
+    "slide": 7,
+    "filename": "slide-07-direction.png",
+    "prompt": "Three abstract icons arranged horizontally on pure white background: (1) a stopwatch representing 'Real-time Risk Triage', (2) a magnifying glass with a document representing 'Explainable Compliance', (3) a growing tree with branches representing 'Progressive Intelligence Standard'. Soft navy blue and teal colors. Clean flat vector icons, minimal and professional, business illustration style, 16:9."
+  },
+  {
+    "slide": 10,
+    "filename": "slide-10-architecture.png",
+    "prompt": "A clean architectural flow diagram on pure white background. Center: a Supervisor node labeled 'Orchestrator'. Three parallel nodes below labeled 'ID Verify', 'Compliance', 'Fraud Scorer' connected by lines. Below: 'JOIN → VERDICT' leading to a final node. Use soft navy blue boxes with light teal accents. Clean minimal flat vector style, professional enterprise architecture diagram, 16:9. Avoid Korean text, use simple universal labels."
+  },
+  {
+    "slide": 13,
+    "filename": "slide-13-roadmap.png",
+    "prompt": "A horizontal 6-stage timeline on pure white background. Stages labeled M0 through M6 with small phase descriptors like 'Infra', 'Pilot', 'Scoring', 'AutoDoc', '8 Dealers', '200 Dealers', 'Full Rollout'. Progress bar fills from left to right in soft navy to teal gradient. Clean flat vector illustration, professional timeline style, minimal design, 16:9."
+  }
+]

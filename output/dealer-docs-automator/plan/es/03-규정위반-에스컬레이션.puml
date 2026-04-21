@@ -1,0 +1,50 @@
+@startuml flow-03-compliance-escalation
+!theme cerulean-outline
+title F03. 규정 위반 에스컬레이션 (Yellow)
+skinparam shadowing false
+
+actor "대리점 영업사원" as Agent
+actor "고객" as Customer
+participant "대리점 단말" as UI
+participant "RTA Orchestrator" as Orch
+participant "RegGuard" as RG
+participant "Knowledge Base\n(규정 RAG)" as KB
+participant "Audit Logger" as AL
+actor "대리점 점장" as Manager
+
+Customer -> Agent : 번호이동 요청 (결합상품 유지 중)
+Agent -> UI : 개통 요청 접수
+UI -> Orch : 이벤트
+
+Orch -> RG : 규정 검증 요청
+RG -> KB : 규정 검색\n("기존 결합 약정 유지 고객 번호이동")
+KB --> RG : 조항 §5.1 + §7.3 + 최근 Q&A 3건
+RG -> RG : 판정: 경고 (결합 해지 페널티 안내 필수)
+RG --> Orch : **Yellow** (사유: 불완전판매 리스크)
+
+Orch -> UI : ⚠️ Yellow · 에스컬레이션 필요
+UI -> Agent : "결합 약정 중인 고객.\n결합 해지 위약금 안내가 필수입니다.\n(규정 §5.1, §7.3)"
+
+Agent -> Manager : 확인 요청
+Manager -> UI : 상황 확인
+
+alt 점장: 영업사원 교육 + 진행
+  Manager -> Agent : "고객에게 위약금 설명 후 진행"
+  Agent -> Customer : 위약금·일정 설명
+  Customer -> UI : 이해·동의 체크
+  UI -> Orch : 동의 확인 기록
+  Orch -> Orch : Yellow → Green 전환
+  Orch -> AL : 사전 설명 완료 이벤트
+else 고객: 번호이동 취소
+  Customer -> Agent : "알았어요, 다음에 할게요"
+  Agent -> UI : 취소 입력
+  UI -> Orch : 취소 이벤트
+  Orch -> AL : 자발적 취소 (불완전판매 방지 성공)
+end
+
+note over Orch, AL
+  가치: 불완전판매 예방 → 철회율·과태료 감소
+  근거: KB 인용 + 사용자 확인 행위 감사 로그
+end note
+
+@enduml

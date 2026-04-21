@@ -1,0 +1,48 @@
+@startuml userflow-overview
+!theme cerulean-outline
+title dealer-docs-automator · 유저플로우 전체 개요
+
+skinparam shadowing false
+skinparam rectangleBorderColor #3B82F6
+skinparam rectangleBackgroundColor #EFF6FF
+
+rectangle "대리점 영업사원" as Agent #FEF3C7
+rectangle "고객 (가입자)" as Customer #FEE2E2
+rectangle "RTA 오케스트레이터\n(LangGraph)" as Orch #DBEAFE
+
+rectangle "Bounded Context" as BCs {
+  rectangle "ID 검증\n(IDV+)" as BC1
+  rectangle "규정 검증\n(RegGuard)" as BC2
+  rectangle "사기 탐지\n(FraudScorer)" as BC3
+  rectangle "서류 생성\n(AutoDoc)" as BC4
+  rectangle "감사 로깅\n(AuditSuite)" as BC5
+  rectangle "본사 제출\n(BSS Gateway)" as BC6
+}
+
+Customer --> Agent : 개통 요청 + 신분증 제출
+Agent --> Orch : 개통 트리거 (대리점 단말)
+Orch --> BC1 : ID 검증 요청
+Orch --> BC2 : 규정 검증 요청
+Orch --> BC3 : 사기 스코어링 요청
+BC1 --> Orch : 검증 결과
+BC2 --> Orch : 판정 + 인용
+BC3 --> Orch : 리스크 스코어
+Orch --> BC4 : 검증 통과 시 서류 생성
+Orch --> BC5 : 전 과정 이벤트 로깅
+Orch --> Agent : Green/Yellow/Red + 근거
+Agent --> Customer : 결과 안내 + 서명 요청
+Customer --> Agent : 전자서명
+Orch --> BC6 : BSS 제출 (Green 시)
+
+note right of Orch
+  대표 유저플로우 (7개):
+  F01. 신규 개통 · 성공 Path (Green)
+  F02. 사기 의심 차단 (Red)
+  F03. 규정 위반 에스컬레이션 (Yellow)
+  F04. 번호이동 (MNP)
+  F05. 법인 개통 (다중 서류)
+  F06. 외국인 가입자 (다국어)
+  F07. BSS 장애 · 오프라인 큐잉
+end note
+
+@enduml
