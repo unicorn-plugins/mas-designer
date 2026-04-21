@@ -1,0 +1,15 @@
+tools:
+  - name: file_read
+    description: "선행 산출물·가이드 읽기"
+    input: { 파일경로 }
+    output: { 파일내용 }
+
+  - name: file_write
+    description: "평가·SVG·핵심 솔루션 저장"
+    input: { 파일경로, 내용 }
+    output: { 저장결과 }
+
+  - name: web_search
+    description: "AI 모델·인프라 최신 사례 조사"
+    input: { 검색어 }
+    output: { 검색결과 }

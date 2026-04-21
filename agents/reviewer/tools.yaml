@@ -1,0 +1,10 @@
+tools:
+  - name: file_read
+    description: "검증 대상 산출물 읽기"
+    input: { 파일경로 }
+    output: { 파일내용 }
+
+  - name: file_write
+    description: "판정 보고서(review-report.md) 저장 — 검증 결과 외 다른 파일 수정 금지"
+    input: { 파일경로, 내용 }
+    output: { 저장결과 }

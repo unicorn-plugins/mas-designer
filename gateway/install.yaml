@@ -1,0 +1,39 @@
+# mas-designer 플러그인 설치 매니페스트
+# Setup 스킬(`/mas-designer:setup`)이 이 파일을 읽어 도구 인프라를 구성함.
+
+# ─────────────────────────────────────────────
+# MCP 서버 — 없음 (WebSearch는 Claude Code builtin 사용)
+# ─────────────────────────────────────────────
+mcp_servers: []
+
+# ─────────────────────────────────────────────
+# LSP 서버 — 없음
+# ─────────────────────────────────────────────
+lsp_servers: []
+
+# ─────────────────────────────────────────────
+# 커스텀 도구 — 플러그인 자체 제공
+# ─────────────────────────────────────────────
+custom_tools:
+  - name: generate_image
+    description: "Gemini(Nano Banana) 기반 이미지 생성 — PPT 슬라이드 일러스트 생성에 사용"
+    source: tools/generate_image.py
+    required: true
+
+# ─────────────────────────────────────────────
+# 런타임 의존성 — 외부 라이브러리 (npm/pip)
+# ─────────────────────────────────────────────
+runtime_dependencies:
+  - name: pptxgenjs
+    description: "PPT 빌드용 Node.js 라이브러리 — generate-pptx 스킬이 사용"
+    runtime: node
+    install: "npm install pptxgenjs"
+    check: "node -e \"require('pptxgenjs')\""
+    required: true
+
+  - name: google-genai
+    description: "Gemini API Python SDK — generate_image 도구가 사용"
+    runtime: python
+    install: "pip install google-genai python-dotenv pillow"
+    check: "python -c \"from google import genai\""
+    required: true

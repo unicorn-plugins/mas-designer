@@ -1,0 +1,155 @@
+---
+name: generate-pptx
+description: STEP 3 경영진 발표 PPT 생성 (spec-writer 위임 + generate_image + pptxgenjs 빌드)
+type: orchestrator
+user-invocable: true
+---
+
+# Generate PPTX (STEP 3: 발표자료 PPT 작성)
+
+[GENERATE-PPTX 활성화]
+
+## 목표
+
+STEP 1 기획·STEP 2 MAS 설계 산출물을 입력받아 경영진 발표용 PPT를 자동 생성함. 2단계 패턴 적용:
+1. **spec-writer 위임**: `pptx-spec-writer` 에이전트가 GREAT 2 WHY·방향성·MAS 아키텍처 필수 슬라이드 포함 명세(`spec.md`) 및 이미지 프롬프트 JSON 작성
+2. **이미지 생성 + 빌드**: 오케스트레이터가 `generate_image`로 슬라이드별 이미지 생성 후 `pptxgenjs` 기반 빌드 스크립트를 Write하여 실행, `.pptx` 산출
+
+외부 변환 스킬(anthropic-skills:pptx 등) 미사용 — Cursor·Cowork 등 모든 런타임 호환.
+
+## 활성화 조건
+
+사용자가 `/mas-designer:generate-pptx` 호출 시 또는 "경영진 발표 PPT", "프리젠테이션 생성", "pptx 빌드" 키워드 감지 시.
+
+## 의존성
+
+`gateway/install.yaml`의 `runtime_dependencies`에 `pptxgenjs` (Node) + `google-genai` (Python) 등록. setup 스킬이 사전 설치함.
+
+## 에이전트 호출 규칙
+
+### 에이전트 FQN
+| 에이전트 | FQN |
+|---------|-----|
+| pptx-spec-writer | `mas-designer:pptx-spec-writer:pptx-spec-writer` |
+
+### 프롬프트 조립
+- `{DMAP_PLUGIN_DIR}/resources/guides/combine-prompt.md`에 따라 AGENT.md + agentcard.yaml + tools.yaml 합치기
+- tier → 모델 매핑은 `gateway/runtime-mapping.yaml` 참조 (MEDIUM → sonnet-4-6)
+
+## 워크플로우
+
+> **선행 조건**: `output/{project}/plan/*.md`(문제해결방향성 등) + `output/{project}/step2/mas-architecture.md` 존재 필수.
+> 없으면 `/mas-designer:plan`·`/mas-designer:design-mas` 먼저 실행하도록 안내 후 중단.
+
+### Phase 1: 입력 확인 (`ulw` 활용)
+
+AskUserQuestion으로 확인 (기본값 사용 시 스킵):
+- PPT 제목 (기본: 프로젝트명 + "경영진 발표")
+- 대상 청중 (기본: 경영진)
+- 목표 슬라이드 수 (기본: 15~17장)
+- 출력 디렉토리 (기본: `output/{project}/step3/`)
+
+### Phase 2: 스토리라인 설계 → Agent: pptx-spec-writer (`ulw` 활용)
+
+스토리라인 초안 작성 후 `output/{project}/step3/1-storyline.md`에 저장.
+
+- **TASK**: GREAT 2 WHY 중심 목차(고객WHY→기업WHY→문제→방향성→핵심솔루션→MAS→로드맵→기대효과) 설계
+- **EXPECTED OUTCOME**: `output/{project}/step3/1-storyline.md`
+- **MUST DO**: 15~17장 목차·각 슬라이드 패턴(A~F) 예비 매핑
+- **MUST NOT DO**: 슬라이드 상세 콘텐츠 작성 금지 (Phase 3에서 수행)
+- **CONTEXT**: 기획 산출물 6종 + mas-architecture.md 전수 로드
+
+### Phase 3: 시각 명세 작성 → Agent: pptx-spec-writer (`ulw` 활용)
+
+- **TASK**: Phase 2 스토리라인 기반 슬라이드별 시각 명세(.md) + 이미지 프롬프트 JSON 작성
+- **EXPECTED OUTCOME**: `output/{project}/step3/2.script.md` + `output/{project}/step3/image-prompts.json`
+- **MUST DO**: `references/pptx-build-guide.md` 1~5절 스타일 준수, 슬라이드당 본문 ≤7줄, 이미지 참조는 `![설명](images/slide-N.png)`, 고객 WHY/기업 WHY 문장은 `문제해결방향성.md` 원문 재사용
+- **MUST NOT DO**: 컬러·폰트 직접 지정 금지(가이드 표준 사용), 실제 이미지 생성 금지(이 Phase는 프롬프트 JSON만)
+- **CONTEXT**: Phase 2 스토리라인 + 기획 산출물 + mas-architecture.md
+
+### Phase 4: 이미지 생성 (Build — Claude Code 직접 수행)
+
+1. `output/{project}/step3/image-prompts.json` 로드
+2. 출력 디렉토리 준비: `mkdir -p output/{project}/step3/images`
+3. 각 항목에 대해 Bash로 generate_image 실행:
+   ```bash
+   python gateway/tools/generate_image.py \
+     --prompt "{prompt}" \
+     --output-dir output/{project}/step3/images \
+     --output-name "{filename without .png}"
+   ```
+4. 실패 시 최대 3회 재시도, 그래도 실패한 슬라이드는 `image-fallback.log`에 기록 후 플레이스홀더 처리
+5. 생성 결과 인벤토리(파일명·크기·상태) 출력
+
+### Phase 5: pptxgenjs 빌드 (Build & Verify — Claude Code 직접 수행)
+
+1. **가이드 로드**: `skills/generate-pptx/references/pptx-build-guide.md` 전체 읽기 (특히 6절 검증 규칙 11항)
+2. **Spec 분석**: `2.script.md` 파싱하여 슬라이드별 패턴(A~F) 매핑
+3. **빌드 코드 작성**: Write 도구로 `output/{project}/step3/build.js` 생성
+   - pptxgenjs 사용, 가이드 6절 11항 모두 준수:
+     - `pptx.shapes.RECTANGLE`/`ROUNDED_RECTANGLE`
+     - `defineLayout({name:"CUSTOM", width:16, height:9})`
+     - `async function createSlideXX(pptx)` 패턴
+     - `slide.addTable()` (수동 셀 그리기 금지)
+     - `fs12()` 헬퍼로 12pt 미만 차단
+     - 이미지 임베딩 전 경로·크기 검증
+     - Pretendard 폰트 통일
+     - `main().catch(e => { console.error(...); process.exit(1); })` 진입점
+4. **빌드 실행**: Bash `cd output/{project}/step3 && node build.js`
+5. **검증**:
+   - 종료 코드 0 확인
+   - `3.{project}.pptx` 존재 + 크기 > 0
+   - 실패 시 에러 분석 → 코드 수정 → 재실행 (최대 3회)
+6. **사용자 보고**: 절대 경로, 파일 크기, 슬라이드 수, 빌드 스크립트 경로
+
+### Phase 6: STEP 3 완료 보고 (`ulw` 활용)
+
+산출물 체크리스트:
+- [ ] step3/1-storyline.md
+- [ ] step3/2.script.md
+- [ ] step3/image-prompts.json
+- [ ] step3/images/*.png (생성 또는 플레이스홀더 로그)
+- [ ] step3/build.js
+- [ ] step3/3.{project}.pptx (0바이트 초과)
+
+사용자에게 완료 보고 + 승인 요청.
+
+## MUST / MUST NOT
+
+**MUST**
+- Phase 2~3은 반드시 pptx-spec-writer 에이전트 위임 (5항목 프롬프트)
+- Phase 4 시작 전 image-prompts.json 구조 검증
+- Phase 5 시작 시 `pptx-build-guide.md` 전체 읽기
+- 가이드 6절 검증 규칙 11항 위반 시 빌드 실패로 간주
+- 빌드 스크립트(`build.js`)를 산출물로 보존
+- `.pptx` 파일 0바이트 초과 검증
+
+**MUST NOT**
+- `anthropic-skills:pptx` 등 외부 변환 스킬 호출 금지
+- spec-writer 에이전트 우회 (오케스트레이터가 직접 명세 작성 금지)
+- 검증 없이 "생성 완료" 보고 금지
+- `.env`에 하드코딩된 API Key를 코드에 복제 금지
+
+## 완료 조건
+
+- [ ] Phase 2~3 에이전트 위임 완료
+- [ ] 이미지 생성 시도 완료 (실패 시 플레이스홀더 로그)
+- [ ] PPTX 파일 0바이트 초과
+- [ ] 가이드 검증 규칙 11항 통과
+- [ ] 사용자 승인
+
+## 검증 프로토콜
+
+Phase 5 완료 후 build.js + .pptx 파일 존재 및 크기 검증. 실패 시 최대 3회 재시도, 그래도 실패하면 사용자에게 에러 로그와 함께 보고.
+
+## 상태 정리
+
+완료 시 임시 파일 없음. `images/` 디렉토리는 산출물로 보존.
+
+## 취소
+
+"cancelomc"/"stopomc" 시 즉시 중단. 진행 중이던 Phase 산출물 보존.
+
+## 재개
+
+마지막 완료 Phase 다음부터 재시작. spec.md·image-prompts.json이 존재하면 Phase 3 스킵.

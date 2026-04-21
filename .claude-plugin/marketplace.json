@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "mas-designer",
+  "owner": {
+    "name": "dreamondal"
+  },
+  "plugins": [
+    {
+      "name": "mas-designer",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

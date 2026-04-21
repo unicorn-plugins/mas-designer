@@ -1,0 +1,15 @@
+tools:
+  - name: file_read
+    description: "산출물 존재·크기 확인"
+    input: { 파일경로 }
+    output: { 파일내용 }
+
+  - name: file_write
+    description: "MANIFEST.md 생성"
+    input: { 파일경로, 내용 }
+    output: { 저장결과 }
+
+  - name: code_execute
+    description: "파일 복사·이동·이름 표준화 (Bash)"
+    input: { 명령 }
+    output: { 결과 }

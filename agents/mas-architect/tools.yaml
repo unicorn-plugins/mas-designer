@@ -1,0 +1,15 @@
+tools:
+  - name: file_read
+    description: "유저스토리·이벤트 스토밍·AI 기술정보 가이드 읽기"
+    input: { 파일경로 }
+    output: { 파일내용 }
+
+  - name: file_write
+    description: "설계서 7섹션 + 통합 설계서 저장"
+    input: { 파일경로, 내용 }
+    output: { 저장결과 }
+
+  - name: web_search
+    description: "최신 LangGraph/LangChain/MCP 패턴 및 사례 조사"
+    input: { 검색어 }
+    output: { 검색결과 }

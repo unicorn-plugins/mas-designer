@@ -1,0 +1,10 @@
+tools:
+  - name: file_read
+    description: "기획 산출물·MAS 설계서·pptx-build-guide 읽기"
+    input: { 파일경로 }
+    output: { 파일내용 }
+
+  - name: file_write
+    description: "spec.md + image-prompts.json 저장"
+    input: { 파일경로, 내용 }
+    output: { 저장결과 }

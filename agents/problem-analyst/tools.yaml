@@ -1,0 +1,20 @@
+tools:
+  - name: file_read
+    description: "가이드·입력 자료 읽기"
+    input: { 파일경로 }
+    output: { 파일내용 }
+
+  - name: file_write
+    description: "산출물 마크다운 저장"
+    input: { 파일경로, 내용 }
+    output: { 저장결과 }
+
+  - name: user_interact
+    description: "사용자 인터뷰 질문"
+    input: { 질문목록 }
+    output: { 답변 }
+
+  - name: web_search
+    description: "업계 사례·벤치마크 리서치"
+    input: { 검색어 }
+    output: { 검색결과 }

@@ -1,0 +1,10 @@
+tools:
+  - name: file_read
+    description: "선행 산출물·가이드 읽기"
+    input: { 파일경로 }
+    output: { 파일내용 }
+
+  - name: file_write
+    description: "유저스토리 마크다운 저장"
+    input: { 파일경로, 내용 }
+    output: { 저장결과 }
