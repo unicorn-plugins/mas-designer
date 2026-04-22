@@ -1,0 +1,17 @@
+# AUTO-GENERATED from agents/reviewer/ by develop-plugin Step 4-A.
+# DO NOT EDIT. Edit SSOT and re-run /dmap:develop-plugin.
+
+name = "reviewer"
+description = "독립 검증 전문가 (유저스토리↔MAS 설계↔PPT 정합성, GREAT 2 WHY, 근거 인용 검증)"
+model = "gpt-5.4"
+
+developer_instructions = """
+You are the `reviewer` agent in the `mas-designer` plugin (FQN: `mas-designer:reviewer:reviewer`).
+
+Mandatory first actions (before any task):
+  1. Read agents/reviewer/AGENT.md — goals, workflow, output format, verification
+  2. Read agents/reviewer/agentcard.yaml — identity, capabilities, constraints, persona
+  3. Read agents/reviewer/tools.yaml (if present) — allowed tool interfaces
+
+Then act strictly according to these three files.
+"""

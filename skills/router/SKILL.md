@@ -1,13 +1,13 @@
 ---
-name: core
+name: router
 description: mas-designer 전체 파이프라인 실행 (기획→설계→PPT→검증, STEP 경계 3회 사용자 승인)
-type: orchestrator
+type: router
 user-invocable: true
 ---
 
-# Core (전체 파이프라인)
+# Router (전체 파이프라인)
 
-[CORE 활성화]
+[ROUTER 활성화]
 
 ## 목표
 
@@ -15,15 +15,11 @@ user-invocable: true
 
 ## 활성화 조건
 
-사용자가 `/mas-designer:core` 호출 시 또는 "AI 기획 도와줘", "멀티에이전트 설계", "기획부터 PPT까지" 등 포괄 요청 키워드 감지 시.
-
-## 에이전트 호출 규칙
-
-본 스킬은 에이전트를 직접 호출하지 않고 다른 스킬(plan / design-mas / generate-pptx / review)에 위임함. 각 하위 스킬이 자체적으로 에이전트 호출을 담당.
+사용자가 `/mas-designer:router` 호출 시 또는 "AI 기획 도와줘", "멀티에이전트 설계", "기획부터 PPT까지" 등 포괄 요청 키워드 감지 시.
 
 ## 워크플로우
 
-### Phase 0: 도메인·주제 수집 + 프로젝트 네이밍 (`ulw` 활용)
+### Phase 0: 도메인·주제 수집 + 프로젝트 네이밍
 
 1. AskUserQuestion으로 비즈니스 도메인·주제·핵심 고민 수집
 2. 수집된 정보에서 영문 kebab-case 프로젝트 식별자 **2~3안** 자동 제안:
@@ -94,27 +90,13 @@ generate-pptx 스킬 완료 보고를 사용자에게 제시.
 - [ ] Phase 4 review APPROVED
 - [ ] final/ 디렉토리 5개 산출물 모두 존재
 
-## 검증 프로토콜
-
-각 Phase 위임 완료 후 하위 스킬의 완료 조건 충족 여부 확인. 1건이라도 누락 시 해당 Phase 재시도(최대 3회). 초과 시 사용자에게 수동 개입 요청.
-
 ## 상태 정리
 
-진행 상태를 `.omc/state/mas-designer-core-progress.json`에 기록:
-```json
-{
-  "project": "{project}",
-  "phase_completed": ["phase-0", "phase-1", ...],
-  "current_phase": "phase-N",
-  "approvals": [{"phase": 1, "at": "2026-04-21T..."}, ...]
-}
-```
-완료 시 상태 파일 삭제.
-
-## 취소
-
-"cancelomc"/"stopomc" 시 즉시 중단. 진행 중이던 Phase까지의 산출물 보존.
+진행 상태를 `AGENTS.md`의 `## 워크플로우 상태` 섹션에 하위 스킬별 Phase 단위로 기록.
+파이프라인 완료 시 각 하위 스킬 항목을 "(기록 없음)"으로 초기화.
 
 ## 재개
 
-상태 파일 존재 시 마지막 `phase_completed` 다음부터 재시작. `{project}` 식별자 재확인 필수.
+1. `AGENTS.md`의 `## 워크플로우 상태` 섹션에서 각 하위 스킬의 `마지막 완료 Phase`를 읽음
+2. 미시작 스킬은 Phase 0부터, 진행 중 스킬은 마지막 완료 Phase 다음부터 재시작
+3. `{project}` 식별자 재확인 필수

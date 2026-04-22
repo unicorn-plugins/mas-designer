@@ -1,39 +1,44 @@
 # mas-designer 런타임 매핑
 # 추상 선언(tier, 추상 도구, 금지 액션) → 구체 구현 변환 테이블.
-# 모델명은 2026-04-21 기준 최신 버전. setup 스킬이 사용자 확인 후 필요 시 조정.
+# DMAP 표준: tier_mapping은 claude-code/cursor/codex/antigravity 4런타임 모두에 대한 엔트리를 포함해야 함.
+# 모델명은 2026-04-22 기준 최신 버전. setup 스킬이 사용자 확인 후 필요 시 조정.
 
 # ─────────────────────────────────────────────
-# 티어 → LLM 모델 매핑
+# 티어 → LLM 모델 매핑 (런타임별)
 # ─────────────────────────────────────────────
 tier_mapping:
-  default:
-    HEAVY:
-      model: "claude-opus-4-7"
-    HIGH:
-      model: "claude-opus-4-7"
-    MEDIUM:
-      model: "claude-sonnet-4-6"
-    LOW:
-      model: "claude-haiku-4-5"
+  HEAVY:
+    claude-code: "claude-opus-4-7"
+    cursor: "claude-opus-4-7"
+    codex: "gpt-5.4"
+    antigravity: "claude-opus-4-7"
+  HIGH:
+    claude-code: "claude-opus-4-7"
+    cursor: "claude-opus-4-7"
+    codex: "gpt-5.4"
+    antigravity: "claude-opus-4-7"
+  MEDIUM:
+    claude-code: "claude-sonnet-4-6"
+    cursor: "claude-sonnet-4-6"
+    codex: "gpt-5.4-mini"
+    antigravity: "claude-sonnet-4-6"
+  LOW:
+    claude-code: "claude-haiku-4-5"
+    cursor: "claude-haiku-4-5"
+    codex: "gpt-5.4-mini"
+    antigravity: "claude-haiku-4-5"
 
-  # mas-architect 세부역할별 예외
-  # graph-designer는 LangGraph 설계의 핵심이므로 HIGH 유지, 나머지는 MEDIUM으로 비용 절감
+# ─────────────────────────────────────────────
+# mas-architect 세부역할별 예외 (sub_role 기반 tier override)
+# graph-designer는 LangGraph 설계 핵심 → HIGH 유지
+# tool-mcp-binder / rag-planner / multimodal-mapper → MEDIUM으로 비용 절감
+# ─────────────────────────────────────────────
+sub_role_tier_override:
   mas-architect:
-    HIGH:
-      model: "claude-opus-4-7"
-    sub_roles:
-      graph-designer:
-        HIGH:
-          model: "claude-opus-4-7"
-      tool-mcp-binder:
-        MEDIUM:
-          model: "claude-sonnet-4-6"
-      rag-planner:
-        MEDIUM:
-          model: "claude-sonnet-4-6"
-      multimodal-mapper:
-        MEDIUM:
-          model: "claude-sonnet-4-6"
+    graph-designer: HIGH
+    tool-mcp-binder: MEDIUM
+    rag-planner: MEDIUM
+    multimodal-mapper: MEDIUM
 
 # ─────────────────────────────────────────────
 # 추상 도구 → 실제 도구 매핑
@@ -55,4 +60,4 @@ action_mapping:
   code_execute: ["Bash"]
   network_access: ["WebFetch", "WebSearch"]
   user_interact: ["AskUserQuestion"]
-  agent_delegate: ["Task"]
+  agent_delegate: ["Task", "Agent"]

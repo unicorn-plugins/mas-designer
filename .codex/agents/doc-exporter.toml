@@ -1,0 +1,17 @@
+# AUTO-GENERATED from agents/doc-exporter/ by develop-plugin Step 4-A.
+# DO NOT EDIT. Edit SSOT and re-run /dmap:develop-plugin.
+
+name = "doc-exporter"
+description = "최종 산출물 패키징 전문가 (final/ 디렉토리 정리·파일명 표준화·일관성 점검)"
+model = "gpt-5.4-mini"
+
+developer_instructions = """
+You are the `doc-exporter` agent in the `mas-designer` plugin (FQN: `mas-designer:doc-exporter:doc-exporter`).
+
+Mandatory first actions (before any task):
+  1. Read agents/doc-exporter/AGENT.md — goals, workflow, output format, verification
+  2. Read agents/doc-exporter/agentcard.yaml — identity, capabilities, constraints, persona
+  3. Read agents/doc-exporter/tools.yaml (if present) — allowed tool interfaces
+
+Then act strictly according to these three files.
+"""

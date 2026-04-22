@@ -46,7 +46,8 @@ setup 스킬은 다음을 자동 수행합니다:
 - `pptxgenjs` (npm) 및 `google-genai` + `python-dotenv` + `pillow` (pip) 설치
 - `gateway/tools/.env`에 `GEMINI_API_KEY` 등록 (사용자 입력)
 - `runtime-mapping.yaml`의 tier → 모델 매핑 사용자 확인
-- 런타임 상주 파일(CLAUDE.md)에 라우팅 테이블 등록
+- 런타임 상주 파일(`~/.claude/CLAUDE.md` 또는 `{PLUGIN_DIR}/AGENTS.md`)에 라우팅 테이블 등록
+- tier 갱신 시 런타임 어댑터 스텁(`.claude/.cursor/.codex/.antigravity/agents/*`) `model:` 필드 일괄 동기화
 
 ---
 
@@ -82,7 +83,7 @@ claude plugin install mas-designer@mas-designer
 |------|------|
 | `/mas-designer:setup` | 플러그인 초기 설정 |
 | `/mas-designer:help` | 사용 안내 |
-| `/mas-designer:core` | **전체 파이프라인** 실행 (기획 → 설계 → PPT → 검증) |
+| `/mas-designer:router` | **전체 파이프라인** 실행 (기획 → 설계 → PPT → 검증) |
 | `/mas-designer:plan` | STEP 1 기획 단독 실행 |
 | `/mas-designer:design-mas` | STEP 2 MAS 설계 단독 실행 |
 | `/mas-designer:generate-pptx` | STEP 3 PPT 생성 단독 실행 |
@@ -91,7 +92,7 @@ claude plugin install mas-designer@mas-designer
 ### 기본 사용 예시
 
 ```
-/mas-designer:core
+/mas-designer:router
 
 → [도메인/주제 입력] "스마트 물류에서 AI 견적 자동화"
 → [프로젝트 식별자 선택] smart-logistics-quoting / ai-quoting-agent / logistics-auto-quote

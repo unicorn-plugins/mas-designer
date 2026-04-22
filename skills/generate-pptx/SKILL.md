@@ -21,10 +21,6 @@ STEP 1 기획·STEP 2 MAS 설계 산출물을 입력받아 경영진 발표용 P
 
 사용자가 `/mas-designer:generate-pptx` 호출 시 또는 "경영진 발표 PPT", "프리젠테이션 생성", "pptx 빌드" 키워드 감지 시.
 
-## 의존성
-
-`gateway/install.yaml`의 `runtime_dependencies`에 `pptxgenjs` (Node) + `google-genai` (Python) 등록. setup 스킬이 사전 설치함.
-
 ## 에이전트 호출 규칙
 
 ### 에이전트 FQN
@@ -41,16 +37,14 @@ STEP 1 기획·STEP 2 MAS 설계 산출물을 입력받아 경영진 발표용 P
 > **선행 조건**: `output/{project}/plan/*.md`(문제해결방향성 등) + `output/{project}/step2/mas-architecture.md` 존재 필수.
 > 없으면 `/mas-designer:plan`·`/mas-designer:design-mas` 먼저 실행하도록 안내 후 중단.
 
-### Phase 1: 입력 확인 (`ulw` 활용)
-
+### Phase 1: 입력 확인
 AskUserQuestion으로 확인 (기본값 사용 시 스킵):
 - PPT 제목 (기본: 프로젝트명 + "경영진 발표")
 - 대상 청중 (기본: 경영진)
 - 목표 슬라이드 수 (기본: 15~17장)
 - 출력 디렉토리 (기본: `output/{project}/step3/`)
 
-### Phase 2: 스토리라인 설계 → Agent: pptx-spec-writer (`ulw` 활용)
-
+### Phase 2: 스토리라인 설계 → Agent: pptx-spec-writer
 스토리라인 초안 작성 후 `output/{project}/step3/1-storyline.md`에 저장.
 
 - **TASK**: GREAT 2 WHY 중심 목차(고객WHY→기업WHY→문제→방향성→핵심솔루션→MAS→로드맵→기대효과) 설계
@@ -59,8 +53,7 @@ AskUserQuestion으로 확인 (기본값 사용 시 스킵):
 - **MUST NOT DO**: 슬라이드 상세 콘텐츠 작성 금지 (Phase 3에서 수행)
 - **CONTEXT**: 기획 산출물 6종 + mas-architecture.md 전수 로드
 
-### Phase 3: 시각 명세 작성 → Agent: pptx-spec-writer (`ulw` 활용)
-
+### Phase 3: 시각 명세 작성 → Agent: pptx-spec-writer
 - **TASK**: Phase 2 스토리라인 기반 슬라이드별 시각 명세(.md) + 이미지 프롬프트 JSON 작성
 - **EXPECTED OUTCOME**: `output/{project}/step3/2.script.md` + `output/{project}/step3/image-prompts.json`
 - **MUST DO**: `references/pptx-build-guide.md` 1~5절 스타일 준수, 슬라이드당 본문 ≤7줄, 이미지 참조는 `![설명](images/slide-N.png)`, 고객 WHY/기업 WHY 문장은 `문제해결방향성.md` 원문 재사용
@@ -81,7 +74,7 @@ AskUserQuestion으로 확인 (기본값 사용 시 스킵):
 4. 실패 시 최대 3회 재시도, 그래도 실패한 슬라이드는 `image-fallback.log`에 기록 후 플레이스홀더 처리
 5. 생성 결과 인벤토리(파일명·크기·상태) 출력
 
-### Phase 5: pptxgenjs 빌드 (Build & Verify — Claude Code 직접 수행)
+### Phase 5: pptxgenjs 빌드 (Build & Verify — Claude Code 직접 수행) (`ralph` 활용)
 
 1. **가이드 로드**: `skills/generate-pptx/references/pptx-build-guide.md` 전체 읽기 (특히 6절 검증 규칙 11항)
 2. **Spec 분석**: `2.script.md` 파싱하여 슬라이드별 패턴(A~F) 매핑
@@ -121,8 +114,7 @@ AskUserQuestion으로 확인 (기본값 사용 시 스킵):
    - 시각 검토 완료 후 임시 파일 정리: `Remove-Item '<preview경로>\*.png' -Force; Remove-Item '.temp\export-pptx.ps1' -Force`
 7. **사용자 보고**: 절대 경로, 파일 크기, 슬라이드 수, 빌드 스크립트 경로, 시각 검토 결과 요약
 
-### Phase 6: STEP 3 완료 보고 (`ulw` 활용)
-
+### Phase 6: STEP 3 완료 보고
 산출물 체크리스트:
 - [ ] step3/1-storyline.md
 - [ ] step3/2.script.md
@@ -133,43 +125,24 @@ AskUserQuestion으로 확인 (기본값 사용 시 스킵):
 
 사용자에게 완료 보고 + 승인 요청.
 
-## MUST / MUST NOT
-
-**MUST**
-- Phase 2~3은 반드시 pptx-spec-writer 에이전트 위임 (5항목 프롬프트)
-- Phase 4 시작 전 image-prompts.json 구조 검증
-- Phase 5 시작 시 `pptx-build-guide.md` 전체 읽기
-- 가이드 6절 검증 규칙 11항 위반 시 빌드 실패로 간주
-- 빌드 스크립트(`build.js`)를 산출물로 보존
-- `.pptx` 파일 0바이트 초과 검증
-
-**MUST NOT**
-- `anthropic-skills:pptx` 등 외부 변환 스킬 호출 금지
-- spec-writer 에이전트 우회 (오케스트레이터가 직접 명세 작성 금지)
-- 검증 없이 "생성 완료" 보고 금지
-- `.env`에 하드코딩된 API Key를 코드에 복제 금지
-- 시각적 검토 후 수정 시 `images/` 폴더의 기존 이미지 파일 삭제 (레이아웃·크기 조정만 허용)
-
 ## 완료 조건
 
 - [ ] Phase 2~3 에이전트 위임 완료
 - [ ] 이미지 생성 시도 완료 (실패 시 플레이스홀더 로그)
-- [ ] PPTX 파일 0바이트 초과
-- [ ] 가이드 검증 규칙 11항 통과
+- [ ] PPTX 파일 0바이트 초과 (Phase 5 검증 A)
+- [ ] 가이드 검증 규칙 11항 통과 (Phase 5 검증 A, 최대 3회 재시도)
+- [ ] PowerShell COM 시각 검토 통과 (Phase 5 검증 B, 최대 2회 재검토)
+- [ ] `images/` 기존 파일 삭제 금지 (레이아웃·크기 조정만 허용)
+- [ ] 외부 변환 스킬(`anthropic-skills:pptx` 등) 미호출
 - [ ] 사용자 승인
-
-## 검증 프로토콜
-
-Phase 5 완료 후 build.js + .pptx 파일 존재 및 크기 검증. 실패 시 최대 3회 재시도, 그래도 실패하면 사용자에게 에러 로그와 함께 보고.
 
 ## 상태 정리
 
+각 Phase 완료 시 `AGENTS.md`의 `## 워크플로우 상태 > ### generate-pptx` 섹션의 `마지막 완료 Phase`를 갱신.
 완료 시 임시 파일 없음. `images/` 디렉토리는 산출물로 보존.
-
-## 취소
-
-"cancelomc"/"stopomc" 시 즉시 중단. 진행 중이던 Phase 산출물 보존.
 
 ## 재개
 
-마지막 완료 Phase 다음부터 재시작. spec.md·image-prompts.json이 존재하면 Phase 3 스킵.
+1. `AGENTS.md`의 `## 워크플로우 상태 > ### generate-pptx` 섹션에서 `마지막 완료 Phase`를 읽음
+2. 상태 섹션이 없거나 "(기록 없음)"이면 **Phase 1: 입력 확인**부터 수행
+3. `spec.md`·`image-prompts.json`이 존재하면 Phase 3 스킵. 마지막 완료 Phase의 다음 Phase부터 진행
