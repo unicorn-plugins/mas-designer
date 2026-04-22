@@ -32,6 +32,14 @@ STEP 1 기획·STEP 2 MAS 설계 산출물을 입력받아 경영진 발표용 P
 - `{DMAP_PLUGIN_DIR}/resources/guides/combine-prompt.md`에 따라 AGENT.md + agentcard.yaml + tools.yaml 합치기
 - tier → 모델 매핑은 `gateway/runtime-mapping.yaml` 참조 (MEDIUM → sonnet-4-6)
 
+### 서브 에이전트 호출
+워크플로우 단계에 `Agent: {agent-name}`이 명시된 경우,
+메인 에이전트는 해당 단계를 직접 수행하지 않고,
+반드시 위 프롬프트 조립 규칙에 따라 해당 에이전트를 호출하여 결과를 받아야 함.
+
+서브에이전트 호출 없이 메인 에이전트가 해당 산출물을 직접 작성하면
+스킬 미준수로 간주함.
+
 ## 워크플로우
 
 > **선행 조건**: `output/{project}/plan/*.md`(문제해결방향성 등) + `output/{project}/step2/mas-architecture.md` 존재 필수.

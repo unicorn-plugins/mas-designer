@@ -29,6 +29,14 @@ reviewer 에이전트를 **독립 컨텍스트로 분리 실행**하여 STEP 1/2
 - 독립 컨텍스트 보장: `Agent(...)` 호출 시 선행 컨텍스트 전달 최소화, 체크리스트 기반 산출물 직접 읽기 강제
 - tier → 모델 매핑 (HIGH → opus-4-7)
 
+### 서브 에이전트 호출
+워크플로우 단계에 `Agent: {agent-name}`이 명시된 경우,
+메인 에이전트는 해당 단계를 직접 수행하지 않고,
+반드시 위 프롬프트 조립 규칙에 따라 해당 에이전트를 호출하여 결과를 받아야 함.
+
+서브에이전트 호출 없이 메인 에이전트가 해당 산출물을 직접 작성하면
+스킬 미준수로 간주함.
+
 ## 워크플로우
 
 > **선행 조건**: `output/{project}/plan/userstory.md` + `output/{project}/step2/mas-architecture.md` + `output/{project}/step3/3.{project}.pptx` 모두 존재.
