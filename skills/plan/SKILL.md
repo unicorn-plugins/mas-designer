@@ -30,7 +30,7 @@ user-invocable: true
 | user-story-writer | `mas-designer:user-story-writer:user-story-writer` |
 
 ### 프롬프트 조립
-- `{DMAP_PLUGIN_DIR}/resources/guides/combine-prompt.md`에 따라 AGENT.md + agentcard.yaml + tools.yaml 합치기
+- `resources/guides/combine-prompt.md`에 따라 AGENT.md + agentcard.yaml + tools.yaml 합치기
 - `Agent(subagent_type=FQN, model=tier_mapping 결과, prompt=조립된 프롬프트)` 호출
 - tier → 모델 매핑은 `gateway/runtime-mapping.yaml` 참조
 

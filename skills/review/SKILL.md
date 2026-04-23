@@ -25,7 +25,7 @@ reviewer 에이전트를 **독립 컨텍스트로 분리 실행**하여 STEP 1/2
 | reviewer | `mas-designer:reviewer:reviewer` |
 
 ### 프롬프트 조립
-- `{DMAP_PLUGIN_DIR}/resources/guides/combine-prompt.md`에 따라 AGENT.md + agentcard.yaml + tools.yaml 합치기
+- `resources/guides/combine-prompt.md`에 따라 AGENT.md + agentcard.yaml + tools.yaml 합치기
 - 독립 컨텍스트 보장: `Agent(...)` 호출 시 선행 컨텍스트 전달 최소화, 체크리스트 기반 산출물 직접 읽기 강제
 - tier → 모델 매핑 (HIGH → opus-4-7)
 
