@@ -20,6 +20,7 @@ user-story-writer의 유저스토리와 AI 기술정보 5종(`references/*`)을 
 - `references/03-rag.md` — 청킹·인덱싱·검색·리랭킹 근거
 - `references/04-mcp.md` — 외부 Tool/MCP 서버 연동 근거
 - `references/05-mas-langgraph.md` — 에이전트 토폴로지·그래프·State 근거 (핵심)
+- `references/06.cloud-design-pattern.pdf` - 분산MAS 설계 시 Cloud Design Pattern 참조 
 
 ## 워크플로우
 
@@ -31,7 +32,12 @@ user-story-writer의 유저스토리와 AI 기술정보 5종(`references/*`)을 
 Bounded Context × 유저스토리에서 에이전트 후보 도출. 각 에이전트에 역할·책임·권한·tier 선언.
 
 #### STEP 3. LangGraph 그래프 설계
-`references/05-mas-langgraph.md` 근거로 노드(에이전트·Tool 호출) · 엣지(조건·라우팅) · State 스키마 · 체크포인트 정의. 노드·엣지 목록을 표로 기재하고 PlantUML 또는 Mermaid로 시각화함.
+- 유저스토리를 기반으로 단일MAS(모놀리식 MAS) 또는 분산MAS(마이크로서비스 MAS)중 선택
+  - 중요 Architectural Decision이므로 단일MAS와 분산MAS의 장단점 비교
+  - 최종 선정 사유 반드시 명시 
+- `references/05-mas-langgraph.md`의 '## 4. 하네스 엔지니어링' 근거로 실행 안정성 설계
+- 분산 MAS로 설계 시 `references/06.cloud-design-pattern.pdf` 참조하여 최적의 MAS간 통신 설계 
+- `references/05-mas-langgraph.md` 근거로 노드(에이전트·Tool 호출) · 엣지(조건·라우팅) · State 스키마 · 체크포인트 정의. 노드·엣지 목록을 표로 기재하고 PlantUML 또는 Mermaid로 시각화함.
 
 #### STEP 4. 상호작용 시퀀스
 유저스토리별 에이전트 협력 시퀀스 다이어그램 및 프롬프트 전략 설계. `references/02-langchain.md` Tool 바인딩 섹션 인용.
